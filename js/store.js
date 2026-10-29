@@ -5,6 +5,7 @@
   const U = A.util;
   const KEY = 'pumpelek.v1';
   A.storageOk = true;
+  let refunded = false;
 
   const str = (v, max, def = '') =>
     typeof v === 'string' ? v.replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, max) : def;
@@ -115,16 +116,25 @@
     }
 
     // avatar
+    let refund = 0;
     const av = raw.avatar && typeof raw.avatar === 'object' ? raw.avatar : {};
     const cfg = av.cfg && typeof av.cfg === 'object' ? av.cfg : {};
     for (const slot of A.avatar.SLOTS) if (typeof cfg[slot] === 'string' && A.avatar.valid(slot, cfg[slot])) s.avatar.cfg[slot] = cfg[slot];
     const owned = new Set();
     for (const k of Array.isArray(av.owned) ? av.owned : []) {
       if (typeof k !== 'string') continue;
+      if (A.avatar.REFUND[k]) { // an item that left the shop: give the coins back
+        refund += A.avatar.REFUND[k];
+        continue;
+      }
       const [slot, id] = k.split(':');
       if (A.avatar.valid(slot, id)) owned.add(k);
     }
     s.avatar.owned = [...owned];
+    if (refund) {
+      d.coins = int(d.coins + refund, 0, 1e8, d.coins);
+      refunded = true;
+    }
     // never leave an item equipped that isn't owned
     for (const slot of A.avatar.SLOTS) {
       const item = A.avatar.item(slot, s.avatar.cfg[slot]);
@@ -173,6 +183,7 @@
       A.storageOk = false;
     }
     A.state = A.sanitize(raw);
+    if (refunded) A.save(); // store the refund so it is only given once
     A.addMissingSeeds();
     A.rollDay();
   };

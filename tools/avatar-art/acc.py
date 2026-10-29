@@ -2,9 +2,8 @@ import os
 import numpy as np
 from PIL import Image, ImageDraw
 A='/Users/joannasieniawska/Documents/Pumpelek/art/'
-FILES={'bow':'Glossy Anime Pink Ribbon Bow.png','flower':'Anime Cherry Blossom Accessory with Leaves.png','kanzashi':'Floral Golden Kanzashi Hairpin.png',
- 'catears':'Cute Black Cat-Ear Headband.png','headphones':'Symmetrical Lavender Over-Ear Headphones.png','crown':'Ornate Golden Gemmed Tiara.png','freckles':'Delicate Freckles Overlay.png'}
-ref=Image.open(A+'reference_for_accessories.png').convert('RGBA')
+FILES={n:f'accessories/acc_{n}.png' for n in ('bow','flower','kanzashi','catears','headphones','crown','freckles')}
+ref=Image.open(A+'reference/reference_for_accessories.png').convert('RGBA')
 def load(n):
     im=Image.open(A+FILES[n]).convert('RGBA')
     return im.resize((1122,1552),Image.LANCZOS)

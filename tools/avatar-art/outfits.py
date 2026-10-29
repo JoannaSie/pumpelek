@@ -11,22 +11,7 @@ PAD = 150
 CUT = 458          # the base is kept down to the chin; below it the outfit's own neck is used
 W, H = 1122, 1402 + PAD
 
-FILES = {
-    'tracksuit': 'Anime Grey Striped Tracksuit Cutout.png',
-    'raincoat': 'Anime Yellow Raincoat Backpack Cutout.png',
-    'blazer': 'Beige Blazer Outfit Overlay.png',
-    'sweaterskirt': 'Cozy Cable-Knit Sweater and Plaid Skirt.png',
-    'wintersweater': 'Cozy Cream Sweater and Blue Scarf Sprite.png',
-    'haori': 'Floral Black Kimono with Red Hakama.png',
-    'sundress': 'Floral Sky-Blue Sundress Sprite.png',
-    'school': 'Headless Anime School Uniform Outfit.png',
-    'oversized': 'Headless Oversized Black Hoodie Template.png',
-    'ninja': 'Headless Purple Ninja Kimono Outfit.png',
-    'casual': 'Headless White Hooded Jacket Illustration.png',
-    'coat': 'Headless Winter Outfit with Burgundy Scarf.png',
-    'pajamas': 'Pastel Pink Cat Pajama Set.png',
-    'kimono': 'outfit_kimono.png',
-}
+FILES = {n: f'outfits/outfit_{n}.png' for n in ('sporty', 'raincoat', 'blazer', 'sweaterskirt', 'wintersweater', 'haori', 'sundress', 'school', 'oversized', 'ninja', 'casual', 'outdoor', 'coat', 'pajamas', 'kimono')}
 
 
 def width_profile(a):
@@ -88,10 +73,16 @@ def place(name, over=None):
         else:
             run = 0
     coll = (coll if coll is not None else im.height) * s + dy
-    cut = int(min(560, max(CUT, top_c * s + dy + 8, min(500, coll - 6))))
+    ntop = int(top_c * s + dy)
+    base_cut = max(CUT, min(500, coll - 6))
+    if ntop + 10 > base_cut:
+        # the outfit's neck starts below the chin: cover its top edge with the base neck, then fade
+        cut = int(max(ntop + 10, min(ntop + 46, coll - 4)))
+    else:
+        cut = int(base_cut)
     if over and 'cut' in over:
         cut = over['cut']
-    return dict(s=s, dx=dx, dy=dy, cut=cut)
+    return dict(s=s, dx=dx, dy=dy, cut=cut, ntop=ntop)
 
 
 def render(name, t, hair='topknot'):

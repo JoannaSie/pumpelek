@@ -29,7 +29,7 @@
     ['pink', 'Pink', '#f0a3bd', 25], ['blue', 'Navy', '#3b4f9a', 25], ['silver', 'Silver', '#d2d5df', 25],
   ].map(([id, name, color, price]) => ({ id, name, price, color }));
   CAT.top = [
-    ['kimono', 'Kimono', 0], ['school', 'School uniform', 0], ['sporty', 'Tracksuit', 25], ['sundress', 'Summer dress', 25],
+    ['kimono', 'Kimono', 0], ['school', 'School uniform', 0], ['casual', 'Cat hoodie & jeans', 0], ['sporty', 'Tracksuit', 25], ['sundress', 'Summer dress', 25],
     ['sweaterskirt', 'Sweater & skirt', 30], ['raincoat', 'Raincoat', 30], ['pajamas', 'Pajamas', 30], ['oversized', 'Big black hoodie', 30],
     ['coat', 'Winter coat', 40], ['wintersweater', 'Sweater & scarf', 40], ['blazer', 'Smart blazer', 45], ['outdoor', 'White jacket', 50],
     ['haori', 'Haori', 60], ['ninja', 'Ninja outfit', 80],
@@ -48,10 +48,11 @@
     { id: 'none', name: 'None', price: 0 },
     { id: 'freckles', name: 'Freckles', price: 10, art: 'freckles' },
   ];
+  // The pets are pictures too, drawn in the bottom-left corner.
   CAT.pet = [
     { id: 'none', name: 'None', price: 0 },
-    ...[['cat', '🐱', 40], ['dog', '🐶', 40], ['bunny', '🐰', 50], ['fox', '🦊', 50], ['panda', '🐼', 60], ['penguin', '🐧', 60], ['unicorn', '🦄', 100], ['dragon', '🐲', 120]]
-      .map(([id, emoji, price]) => ({ id, name: id[0].toUpperCase() + id.slice(1), price, emoji })),
+    ...[['cat', 40], ['dog', 40], ['bunny', 50], ['fox', 50], ['panda', 60], ['penguin', 60], ['unicorn', 100], ['dragon', 120]]
+      .map(([id, price]) => ({ id, name: id[0].toUpperCase() + id.slice(1), price, art: id })),
   ];
   const bgs = [
     ['paper', 'Paper', ['#dcd8d0', '#c8c3b8'], 0],
@@ -106,9 +107,12 @@
     const top = get('top', cfg.top).id;
     const head = get('head', cfg.head);
     const face = get('face', cfg.face);
+    const pet = get('pet', cfg.pet);
+    // headphones and the hair stick are drawn separately for every hairstyle
+    const extra = head.art && (A.art.box[`acc:${head.art}:${hair}`] ? `acc:${head.art}:${hair}` : 'acc:' + head.art);
     return [
       `hair:${hair}:back:${color}`, `outfit:${top}:${s}`, `head:${s}`,
-      face.art ? 'acc:' + face.art : '', `hair:${hair}:front:${color}`, head.art ? 'acc:' + head.art : '',
+      face.art ? 'acc:' + face.art : '', `hair:${hair}:front:${color}`, extra || '', pet.art ? 'pet:' + pet.art : '',
     ].filter((k) => k && A.art.box[k]);
   }
   V.urls = (cfg) => layerKeys(cfg).map(url);
@@ -127,7 +131,6 @@
 
   V.svg = (cfg, vb) => {
     const uid = 'a' + ++counter;
-    const pet = get('pet', cfg.pet);
     return (
       `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb || `0 0 ${A.art.W} ${A.art.H}`}" aria-hidden="true">` +
       bgSvg(get('bg', cfg.bg), uid) +
@@ -135,7 +138,6 @@
         const b = A.art.box[k];
         return `<image href="${url(k)}" x="${b[0]}" y="${b[1]}" width="${b[2]}" height="${b[3]}"/>`;
       }).join('') +
-      (pet.emoji ? `<text x="170" y="1500" font-size="250" text-anchor="middle">${pet.emoji}</text>` : '') +
       '</svg>'
     );
   };
@@ -145,7 +147,7 @@
   // Which part of the picture to show when previewing one slot (canvas units: x y width height).
   V.VIEW = {
     hair: '215 0 690 760', hairColor: '215 0 690 760', head: '240 30 640 640', face: '350 330 420 330',
-    skin: '330 190 460 460', top: '90 520 940 820', pet: '0 1230 460 322', bg: '0 0 1122 1552',
+    skin: '330 190 460 460', top: '90 520 940 820', pet: '0 1110 460 442', bg: '0 0 1122 1552',
   };
   V.HEAD_VIEW = '265 40 590 590';
 })(window.A);

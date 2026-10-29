@@ -38,38 +38,6 @@ def recolor(img, color):
     new = np.where((r < 1)[..., None], dark, light)
     h, s, v = hsv(rgb)
     keep = ((h >= 340) | (h <= 14)) & (s > 0.45) & (v > 0.3)   # the red hair ties
-    # outlines stay dark neutral-brown so the line art does not turn pastel
     out = np.where(keep[..., None], rgb, new)
     arr[..., :3] = np.clip(out, 0, 255).astype(np.uint8)
     return Image.fromarray(arr, 'RGBA')
-
-
-if __name__ == '__main__':
-    from PIL import ImageDraw
-    tiles = []
-    for color in COLORS:
-        c = Image.new('RGBA', (1122, 1552), (232, 228, 222, 255))
-        for l in ('hair_braids_back', 'outfit_kimono', 'head'):
-            c = Image.alpha_composite(c, Image.open(R + l + '.png'))
-        c = Image.alpha_composite(c, recolor(Image.open(R + 'hair_braids_front.png'), color))
-        t = c.convert('RGB').crop((250, 60, 880, 1000)).resize((210, 313))
-        ImageDraw.Draw(t).text((4, 4), color, fill=(255, 0, 0))
-        tiles.append(t)
-    sheet = Image.new('RGB', (210 * 9, 313))
-    for i, t in enumerate(tiles):
-        sheet.paste(t, (i * 210, 0))
-    # back layers need the colour too: build the first row with front only, second row with the back
-    tiles2 = []
-    for color in COLORS:
-        c = Image.new('RGBA', (1122, 1552), (232, 228, 222, 255))
-        c = Image.alpha_composite(c, recolor(Image.open(R + 'hair_ballerina_back.png'), color))
-        for l in ('outfit_school', 'head'):
-            c = Image.alpha_composite(c, Image.open(R + l + '.png'))
-        c = Image.alpha_composite(c, recolor(Image.open(R + 'hair_ballerina_front.png'), color))
-        tiles2.append(c.convert('RGB').crop((250, 0, 880, 940)).resize((210, 313)))
-    sheet2 = Image.new('RGB', (210 * 9, 313 * 2))
-    for i, t in enumerate(tiles):
-        sheet2.paste(t, (i * 210, 0))
-    for i, t in enumerate(tiles2):
-        sheet2.paste(t, (i * 210, 313))
-    sheet2.save('haircolors.png')

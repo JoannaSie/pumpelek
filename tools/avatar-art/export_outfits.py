@@ -4,9 +4,7 @@ from PIL import Image
 import outfits as O
 T = json.load(open('outfit_transforms.json'))
 OUT = O.R
-IDS = {'tracksuit': 'sporty', 'raincoat': 'raincoat', 'blazer': 'blazer', 'sweaterskirt': 'sweaterskirt', 'wintersweater': 'wintersweater',
-       'haori': 'haori', 'sundress': 'sundress', 'school': 'school', 'oversized': 'oversized', 'ninja': 'ninja', 'casual': 'outdoor', 'coat': 'coat',
-       'pajamas': 'pajamas', 'kimono': 'kimono'}
+IDS = {n: n for n in O.FILES}
 base = np.array(Image.open(O.A + 'base.png').convert('RGBA'))
 # head: the base down to the chin, no feathering
 h = base.copy(); h[O.CUT:, :, 3] = 0
@@ -15,12 +13,29 @@ for old in [f for f in os.listdir(OUT) if f.startswith('outfit_')]:
     os.remove(OUT + old)
 for n, t in T.items():
     im = Image.open(O.A + O.FILES[n]).convert('RGBA')
+    if t.get('ntop', 0) >= 480:
+        # the drawing has a chin shadow at the top of its neck; the base neck brings its own, so flatten this one
+        arr = np.array(im)
+        y0 = t['ntop'] - t['dy']                      # neck top in the outfit's own coordinates
+        sub = arr[y0:y0 + 90, 495:630].astype(np.float32)
+        r, g, b = sub[..., 0], sub[..., 1], sub[..., 2]
+        mx, mn = sub[..., :3].max(axis=2), sub[..., :3].min(axis=2)
+        skin = (sub[..., 3] > 200) & (r > g) & (g > b) & (mx > 170) & ((mx - mn) / (mx + 1e-6) > 0.1) & ((mx - mn) / (mx + 1e-6) < 0.45)
+        lower = skin.copy(); lower[:40] = False
+        if lower.sum() > 200:
+            lum = sub[..., :3].mean(axis=2)
+            light = np.median(sub[lower & (lum >= np.percentile(lum[lower], 60))][:, :3], axis=0)
+            top = skin & (lum < light.mean() - 2)
+            sub[top, :3] = light
+            arr[y0:y0 + 90, 495:630] = sub.astype(np.uint8)
+            im = Image.fromarray(arr, 'RGBA')
     layer = Image.new('RGBA', (O.W, O.H), (0, 0, 0, 0))
     layer.alpha_composite(im, dest=(round(t['dx']), round(t['dy']) + O.PAD))
     # neck filler from the base: rows 440..cut, soft at the bottom, drawn under the outfit's own pixels? no: over, so the neck is continuous
     cut = t['cut']; strip = base.copy()
     strip[:440, :, 3] = 0; strip[cut:, :, 3] = 0
-    f0 = max(O.CUT, cut - 20)
+    nt = int(t.get('ntop', 0))
+    f0 = max(O.CUT, cut - 20) if nt + 10 <= cut - 20 or nt < O.CUT else max(nt + 4, cut - 14)
     for i, y in enumerate(range(f0, cut)):
         strip[y, :, 3] = (strip[y, :, 3] * (1 - (i + 1) / (cut - f0 + 1))).astype(np.uint8)
     s = Image.new('RGBA', (O.W, O.H), (0, 0, 0, 0)); s.alpha_composite(Image.fromarray(strip, 'RGBA'), dest=(0, O.PAD))

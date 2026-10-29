@@ -14,8 +14,10 @@ os.makedirs(OUT, exist_ok=True)
 W, H = 1122, 1552
 SCALE = 0.5
 HAIRS = ['topknot', 'ballerina', 'long', 'halfup', 'buns', 'braid', 'lowtail', 'ponytail', 'braids']
-OUTFITS = ['kimono', 'school', 'sporty', 'coat', 'sundress', 'sweaterskirt', 'raincoat', 'haori', 'outdoor', 'blazer', 'wintersweater', 'oversized', 'pajamas', 'ninja']
-ACCS = ['bow', 'flower', 'kanzashi', 'catears', 'headphones', 'crown', 'freckles']
+OUTFITS = ['kimono', 'school', 'casual', 'sporty', 'coat', 'sundress', 'sweaterskirt', 'raincoat', 'haori', 'outdoor', 'blazer', 'wintersweater', 'oversized', 'pajamas', 'ninja']
+ACCS = ['bow', 'flower', 'catears', 'crown', 'freckles']   # the same picture on every hairstyle
+FITTED = ['headphones', 'kanzashi']                        # drawn separately for each hairstyle
+PETS = ['cat', 'dog', 'bunny', 'fox', 'panda', 'penguin', 'unicorn', 'dragon']
 SKINS = ['s0', 's1', 's2', 's3', 's4', 's5']
 TONES = skin2.TONES
 manifest = {}
@@ -51,6 +53,11 @@ if __name__ == '__main__':
             save(f'head:{s}', head if i == 0 else skin2.recolor(head, TONES[i], 'head'))
         for a in ACCS:
             save(f'acc:{a}', op('acc_' + a))
+        for a in FITTED:
+            for h in HAIRS:
+                save(f'acc:{a}:{h}', op(f'acc_{a}_{h}'))
+        for p in PETS:
+            save(f'pet:{p}', op('pet_' + p))
     if part in ('all', 'outfit'):
         for o in OUTFITS:
             img = op('outfit_' + o)

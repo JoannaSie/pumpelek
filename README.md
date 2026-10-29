@@ -53,7 +53,10 @@ js/util.js          pomocnicze (DOM, sprawdzanie odpowiedzi, dźwięk, okna)
 js/store.js         zapis danych i ich walidacja
 js/srs.js           algorytm powtórek
 js/csv.js           import i eksport CSV
-js/avatar.js        awatar i sklepik
+js/avatar.js        awatar (warstwy obrazków) i sklepik
+js/avatar-art.js    położenie warstw awatara (generowane)
+img/avatar/         obrazki awatara (WebP): głowa, fryzury w 9 kolorach, stroje w 6 odcieniach skóry, dodatki
+tools/avatar-art/   skrypty Pythona, którymi obrazki powstały z oryginałów z folderu art/ (nie jest w repozytorium)
 js/game.js          XP, poziomy, seria, odznaki
 js/study.js         sesja nauki i ćwiczenia
 js/screens.js       ekrany Learn / Words / Style / Progress, ustawienia

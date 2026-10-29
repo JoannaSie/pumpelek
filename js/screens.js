@@ -361,8 +361,8 @@
 
   // ---- Style (avatar) ------------------------------------------------------------------------------
   const CATS = [
-    ['hair', 'Hair', '💇'], ['hairColor', 'Color', '🎨'], ['top', 'Outfit', '👕'], ['head', 'Extras', '🎀'], ['face', 'Glasses', '👓'],
-    ['eyes', 'Eyes', '👀'], ['mouth', 'Mouth', '😊'], ['skin', 'Skin', '🖐️'], ['pet', 'Pets', '🐱'], ['bg', 'Scene', '🌅'],
+    ['hair', 'Hair', '💇'], ['hairColor', 'Color', '🎨'], ['top', 'Outfit', '👕'], ['head', 'Extras', '🎀'], ['face', 'Freckles', '✨'],
+    ['skin', 'Skin', '🖐️'], ['pet', 'Pets', '🐱'], ['bg', 'Scene', '🌅'],
   ];
 
   function style() {

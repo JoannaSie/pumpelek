@@ -1,5 +1,5 @@
 // Network first, cache as fallback: updates show up right away when online, and the app still opens offline.
-const CACHE = 'pumpelek-v7';
+const CACHE = 'pumpelek-v8';
 const ASSETS = [
   './', 'index.html', 'manifest.webmanifest', 'css/style.css',
   'js/util.js', 'js/seed.js', 'js/avatar.js', 'js/store.js', 'js/srs.js', 'js/csv.js',

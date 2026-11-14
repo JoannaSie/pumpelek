@@ -28,7 +28,7 @@ def tight(name):
 
 def headphones(hair):
     raw = tight('headphones')
-    w_t = 460
+    w_t = 630
     h_t = round(raw.height * w_t / raw.width)
     raw = raw.resize((w_t, h_t), Image.LANCZOS)
     arc_h = round(h_t * 0.20)

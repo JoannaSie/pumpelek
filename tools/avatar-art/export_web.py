@@ -71,5 +71,5 @@ if __name__ == '__main__':
                 for c in haircolor.COLORS:
                     save(f'hair:{h}:{side}:{c}', haircolor.recolor(img, c))
             print('hair', h, flush=True)
-    json.dump(manifest, open(f'/private/tmp/claude-501/-Users-joannasieniawska-Projects-Diet-Assistance/85fd9c83-cdc1-4b9f-aa86-60432083199b/scratchpad/manifest_{part}.json', 'w'))
+    json.dump(manifest, open(os.path.join(os.path.dirname(os.path.abspath(__file__)), f'manifest_{part}.json'), 'w'))
     print(part, 'files', len(manifest), 'bytes', total)

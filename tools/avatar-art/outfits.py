@@ -80,6 +80,8 @@ def place(name, over=None):
         cut = int(max(ntop + 10, min(ntop + 46, coll - 4)))
     else:
         cut = int(base_cut)
+    if ntop <= 500 and name != 'wintersweater':
+        cut = 504   # the base's chin shadow ends by itself at row 500: take all of it, so there is only one shadow
     if over and 'cut' in over:
         cut = over['cut']
     return dict(s=s, dx=dx, dy=dy, cut=cut, ntop=ntop)

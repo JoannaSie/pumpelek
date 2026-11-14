@@ -7,6 +7,7 @@ from scipy import ndimage as ndi
 T = json.load(open('outfit_transforms.json'))
 OUT = O.R
 IDS = {n: n for n in O.FILES}
+HOODED = set(O.FILES) - {'wintersweater'}   # every outfit whose neck shows; the scarf one hides it
 base = np.array(Image.open(O.A + 'base.png').convert('RGBA'))
 # head: the base down to the chin, no feathering
 h = base.copy(); h[O.CUT:, :, 3] = 0
@@ -15,7 +16,7 @@ for old in [f for f in os.listdir(OUT) if f.startswith('outfit_')]:
     os.remove(OUT + old)
 for n, t in T.items():
     im = Image.open(O.A + O.FILES[n]).convert('RGBA')
-    if t.get('ntop', 0) >= 480:
+    if n in HOODED:
         # the drawing has a chin shadow at the top of its neck; the base neck brings its own, so flatten this one
         arr = np.array(im)
         y0 = t['ntop'] - t['dy']                      # neck top in the outfit's own coordinates
@@ -49,7 +50,7 @@ for n, t in T.items():
             im = Image.fromarray(arr, 'RGBA')
     layer = Image.new('RGBA', (O.W, O.H), (0, 0, 0, 0))
     layer.alpha_composite(im, dest=(round(t['dx']), round(t['dy']) + O.PAD))
-    if t.get('ntop', 0) >= 480:
+    if n in HOODED:
         # the outfit's own skin is a little pinker than the base's: bring it to the same colour
         arr = np.array(layer)
         rgbf = arr[..., :3].astype(np.float32)
@@ -82,11 +83,11 @@ for n, t in T.items():
         strip[496:cut] = row
     strip[cut:, :, 3] = 0
     nt = int(t.get('ntop', 0))
-    f0 = max(O.CUT, cut - 20) if nt + 10 <= cut - 20 or nt < O.CUT else max(nt + 4, cut - 14)
+    f0 = cut - 3 if cut == 504 else (max(O.CUT, cut - 20) if nt + 10 <= cut - 20 or nt < O.CUT else max(nt + 4, cut - 14))
     for i, y in enumerate(range(f0, cut)):
         strip[y, :, 3] = (strip[y, :, 3] * (1 - (i + 1) / (cut - f0 + 1))).astype(np.uint8)
     s = Image.new('RGBA', (O.W, O.H), (0, 0, 0, 0)); s.alpha_composite(Image.fromarray(strip, 'RGBA'), dest=(0, O.PAD))
-    layer = Image.alpha_composite(layer, s)
+    layer = Image.alpha_composite(s, layer) if n == 'wintersweater' else Image.alpha_composite(layer, s)   # the scarf goes in front of the neck
     layer.save(f'{OUT}outfit_{IDS[n]}.png')
 print(sorted(f for f in os.listdir(OUT) if f.startswith('outfit_') or f == 'head.png'))
 # check from the exported files only

@@ -93,7 +93,7 @@ for n, t in T.items():
         sa = np.array(s)
         # the neck goes down to the inner front edge of the turtleneck: a shallow smile-shaped curve (marked by hand on the picture)
         for x in range(sa.shape[1]):
-            lim = int(round(724 - 14 * ((x - 561) / 58.0) ** 2)) - 2
+            lim = int(round(709 - 14 * ((x - 561) / 58.0) ** 2)) - 2
             sa[max(lim, 0):, x, 3] = 0
         layer = Image.alpha_composite(layer, Image.fromarray(sa, 'RGBA'))
     else:

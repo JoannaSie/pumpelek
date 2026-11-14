@@ -91,12 +91,10 @@ for n, t in T.items():
         # the neck comes up out of the white turtleneck, in front of the dark inside of the scarf:
         # draw it over the outfit, but only above the top edge of the white collar (column by column)
         sa = np.array(s)
-        lay = np.asarray(layer)
-        white = (lay[..., 3] > 200) & (lay[..., :3].min(axis=2) > 205) & ((lay[..., :3].max(axis=2).astype(int) - lay[..., :3].min(axis=2)) < 32)
+        # the neck goes down to the inner front edge of the turtleneck: a shallow smile-shaped curve (marked by hand on the picture)
         for x in range(sa.shape[1]):
-            col = np.nonzero(white[560:760, x])[0]
-            lim = 560 + int(col[0]) - 1 if len(col) else 760
-            sa[lim:, x, 3] = 0
+            lim = int(round(724 - 14 * ((x - 561) / 58.0) ** 2)) - 2
+            sa[max(lim, 0):, x, 3] = 0
         layer = Image.alpha_composite(layer, Image.fromarray(sa, 'RGBA'))
     else:
         layer = Image.alpha_composite(layer, s)

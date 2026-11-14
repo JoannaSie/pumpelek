@@ -41,7 +41,6 @@
     { id: 'flower', name: 'Flower', price: 20, art: 'flower' },
     { id: 'kanzashi', name: 'Hair stick', price: 30, art: 'kanzashi' },
     { id: 'ears', name: 'Cat ears', price: 40, art: 'catears' },
-    { id: 'headphones', name: 'Headphones', price: 60, art: 'headphones' },
     { id: 'crown', name: 'Crown', price: 100, art: 'crown' },
   ];
   CAT.face = [
@@ -76,6 +75,7 @@
     'hairColor:purple': 25, 'hairColor:mint': 25, 'hair:curly': 15,
     'eyes:wink': 10, 'eyes:sparkle': 20, 'mouth:cat': 10, 'mouth:open': 10,
     'face:round-glasses': 25, 'face:sunglasses': 30, 'face:heart-glasses': 45,
+    'head:headphones': 60,
   };
 
   const get = (slot, id) => CAT[slot].find((x) => x.id === id) || CAT[slot][0];
@@ -108,7 +108,7 @@
     const head = get('head', cfg.head);
     const face = get('face', cfg.face);
     const pet = get('pet', cfg.pet);
-    // headphones and the hair stick are drawn separately for every hairstyle
+    // the hair stick is drawn separately for every hairstyle
     const extra = head.art && (A.art.box[`acc:${head.art}:${hair}`] ? `acc:${head.art}:${hair}` : 'acc:' + head.art);
     return [
       `hair:${hair}:back:${color}`, `outfit:${top}:${s}`, `head:${s}`,

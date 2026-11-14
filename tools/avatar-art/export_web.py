@@ -62,7 +62,7 @@ if __name__ == '__main__':
         for o in OUTFITS:
             img = op('outfit_' + o)
             for i, s in enumerate(SKINS):
-                save(f'outfit:{o}:{s}', img if i == 0 else skin2.recolor(img, TONES[i], 'outfit', o == 'sundress'))
+                save(f'outfit:{o}:{s}', img if i == 0 else skin2.recolor(img, TONES[i], 'outfit', o == 'sundress', 681 if o == 'wintersweater' else True))
             print('outfit', o, flush=True)
     if part in ('all', 'hair'):
         for h in HAIRS:

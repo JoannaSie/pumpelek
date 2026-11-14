@@ -87,7 +87,19 @@ for n, t in T.items():
     for i, y in enumerate(range(f0, cut)):
         strip[y, :, 3] = (strip[y, :, 3] * (1 - (i + 1) / (cut - f0 + 1))).astype(np.uint8)
     s = Image.new('RGBA', (O.W, O.H), (0, 0, 0, 0)); s.alpha_composite(Image.fromarray(strip, 'RGBA'), dest=(0, O.PAD))
-    layer = Image.alpha_composite(s, layer) if n == 'wintersweater' else Image.alpha_composite(layer, s)   # the scarf goes in front of the neck
+    if n == 'wintersweater':
+        # the neck comes up out of the white turtleneck, in front of the dark inside of the scarf:
+        # draw it over the outfit, but only above the top edge of the white collar (column by column)
+        sa = np.array(s)
+        lay = np.asarray(layer)
+        white = (lay[..., 3] > 200) & (lay[..., :3].min(axis=2) > 205) & ((lay[..., :3].max(axis=2).astype(int) - lay[..., :3].min(axis=2)) < 32)
+        for x in range(sa.shape[1]):
+            col = np.nonzero(white[560:760, x])[0]
+            lim = 560 + int(col[0]) - 1 if len(col) else 760
+            sa[lim:, x, 3] = 0
+        layer = Image.alpha_composite(layer, Image.fromarray(sa, 'RGBA'))
+    else:
+        layer = Image.alpha_composite(layer, s)
     layer.save(f'{OUT}outfit_{IDS[n]}.png')
 print(sorted(f for f in os.listdir(OUT) if f.startswith('outfit_') or f == 'head.png'))
 # check from the exported files only

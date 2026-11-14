@@ -27,7 +27,8 @@ def mask_head(rgb, a):
     return (a > 0) & (h <= 32) & (s >= 0.08) & (s <= 0.8) & (v >= 0.58)
 
 
-def mask_outfit(rgb, a, arms=False):
+def mask_outfit(rgb, a, arms=False, loose=True):
+    # loose: True = neck zone down to row 760; a number = neck zone only down to that row
     h, s, v = hsv(rgb)
     strict = (a > 20) & (h >= 18) & (h <= 28) & (s >= 0.15) & (s <= 0.45) & (v >= 0.55)
     lab, n = ndi.label(strict)
@@ -44,9 +45,10 @@ def mask_outfit(rgb, a, arms=False):
         keep[i] = in_neck or is_hand or is_arm
     m = keep[lab]
     # the neck zone itself, loosely, so the shaded neck and the join with the head are included
-    zone = np.zeros_like(m); zone[470:760, 480:650] = True
+    zone = np.zeros_like(m); zone[470:(760 if loose is True else int(loose)), 480:650] = True
+    loose_zone = bool(loose)
     loose = (a > 0) & (h >= 10) & (h <= 30) & (s >= 0.12) & (s <= 0.7) & (v >= 0.5) & zone
-    return m | loose
+    return (m | loose) if loose_zone else m
 
 
 def tint(arr, m, tone):
@@ -58,10 +60,10 @@ def tint(arr, m, tone):
     return out
 
 
-def recolor(img, tone, kind, arms=False):
+def recolor(img, tone, kind, arms=False, loose=True):
     arr = np.array(img.convert('RGBA'))
     rgb = arr[..., :3].astype(np.float32)
-    m = mask_head(rgb, arr[..., 3]) if kind == 'head' else mask_outfit(rgb, arr[..., 3], arms)
+    m = mask_head(rgb, arr[..., 3]) if kind == 'head' else mask_outfit(rgb, arr[..., 3], arms, loose)
     # pixels on the soft edge of the skin area (blended with outline or background) get the tint too
     h, s, v = hsv(rgb)
     edge = ndi.binary_dilation(m, iterations=2) & ~m & (arr[..., 3] > 0) & (v >= 0.45) & (h <= 45)

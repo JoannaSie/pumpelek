@@ -484,9 +484,11 @@
         b.setAttribute('aria-checked', String(s[key]));
         A.save();
         if (key === 'sound' && s.sound) U.sfx.good();
+        if (key === 'loud') U.playbackMode();
       } }, h('i'));
       return h('div', { class: 'set-row' }, h('span', null, text), b);
     };
+    const check = h('p', { class: 'muted small' }, 'Tap “Sound check” and turn the ringer switch on (no orange) if you hear nothing.');
     U.modal({
       title: 'Settings',
       body: h('div', null,
@@ -498,6 +500,14 @@
         toggle('intro', 'Show new words before practising them'),
         toggle('sound', 'Sound effects'),
         U.canSpeak() ? toggle('tts', 'Read words aloud') : null,
+        toggle('loud', 'Play sound even if the phone is on silent'),
+        h('button', { class: 'link', onclick: () => {
+          U.unlockAudio();
+          U.sfx.good();
+          U.speak('Hello! Can you hear me?');
+          check.textContent = U.soundInfo();
+        } }, '🔊 Sound check'),
+        check,
         h('button', { class: 'link danger', onclick: async () => {
           if (await U.confirm('Erase everything?', 'All cards, progress, coins and avatar items on this device will be deleted. This cannot be undone. Tip: make a backup first.', 'Erase', 'red')) {
             A.resetAll();

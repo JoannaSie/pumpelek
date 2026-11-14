@@ -96,27 +96,54 @@
   };
 
   // ---- sound & speech ---------------------------------------------------
+  // iPhones are strict about audio: it must be started by a tap, it is muted by the ring/silent switch unless the page
+  // asks for "playback" mode, a suspended or "interrupted" context has to be resumed, and speechSynthesis drops a
+  // phrase that is spoken right after cancel(). The code below works around each of these.
   let ctx = null;
+  let keep = null;      // a silent looping clip, only for iPhones too old to know navigator.audioSession
+  let voice = null;
+  let spoken = null;    // keeps the utterance alive until it is finished (otherwise it can be garbage collected mid-sentence)
+  let speakId = 0;
+  const loud = () => !!(A.state && A.state.settings.loud !== false);
+
+  // let sound play even when the silent switch is on (if she wants that)
+  U.playbackMode = () => {
+    try {
+      if (navigator.audioSession) navigator.audioSession.type = loud() ? 'playback' : 'auto';
+      else if (loud()) {
+        keep = keep || Object.assign(new Audio('audio/silence.wav'), { loop: true });
+        keep.play().catch(() => {});
+      } else if (keep) keep.pause();
+    } catch (e) { /* optional */ }
+  };
+
+  function audioCtx() {
+    ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+    return ctx;
+  }
   function beep(notes) {
     if (!A.state || !A.state.settings.sound) return;
     try {
-      ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
-      if (ctx.state === 'suspended') ctx.resume();
-      let t = ctx.currentTime;
-      for (const [f, d] of notes) {
-        const o = ctx.createOscillator();
-        const g = ctx.createGain();
-        o.type = 'triangle';
-        o.frequency.value = f;
-        g.gain.setValueAtTime(0.0001, t);
-        g.gain.exponentialRampToValueAtTime(0.16, t + 0.01);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + d);
-        o.connect(g);
-        g.connect(ctx.destination);
-        o.start(t);
-        o.stop(t + d + 0.02);
-        t += d * 0.8;
-      }
+      const c = audioCtx();
+      const go = () => {
+        let t = c.currentTime;
+        for (const [f, d] of notes) {
+          const o = c.createOscillator();
+          const g = c.createGain();
+          o.type = 'triangle';
+          o.frequency.value = f;
+          g.gain.setValueAtTime(0.0001, t);
+          g.gain.exponentialRampToValueAtTime(0.3, t + 0.01);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+          o.connect(g);
+          g.connect(c.destination);
+          o.start(t);
+          o.stop(t + d + 0.02);
+          t += d * 0.8;
+        }
+      };
+      if (c.state === 'running') go();
+      else c.resume().then(go).catch(() => {}); // 'suspended', or 'interrupted' after a call or the lock screen
     } catch (e) { /* sound is optional */ }
   }
   U.sfx = {
@@ -125,16 +152,81 @@
     win: () => beep([[523, 0.12], [659, 0.12], [784, 0.12], [1047, 0.3]]),
     coin: () => beep([[988, 0.07], [1319, 0.14]]),
   };
+
   U.canSpeak = () => 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+  function pickVoice() {
+    try {
+      const en = speechSynthesis.getVoices().filter((v) => /^en([-_]|$)/i.test(v.lang));
+      voice = en.find((v) => /en[-_]US/i.test(v.lang) && v.localService) || en.find((v) => /en[-_]US/i.test(v.lang)) || en[0] || null;
+    } catch (e) { voice = null; }
+  }
+  if (U.canSpeak()) {
+    pickVoice();
+    if (speechSynthesis.addEventListener) speechSynthesis.addEventListener('voiceschanged', pickVoice); // voices arrive late on iPhones
+  }
   U.speak = (text, rate = 0.9) => {
     if (!U.canSpeak() || !A.state || !A.state.settings.tts) return;
     try {
-      speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'en-US';
-      u.rate = rate;
-      speechSynthesis.speak(u);
+      const id = ++speakId;
+      const say = () => {
+        if (id !== speakId) return; // a newer phrase has replaced this one
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'en-US';
+        if (voice) u.voice = voice;
+        u.rate = rate;
+        u.volume = 1;
+        u.onend = u.onerror = () => { if (spoken === u) spoken = null; };
+        spoken = u;
+        speechSynthesis.speak(u);
+      };
+      if (speechSynthesis.paused) speechSynthesis.resume(); // can get stuck paused after the app was in the background
+      if (speechSynthesis.speaking || speechSynthesis.pending) {
+        speechSynthesis.cancel();
+        setTimeout(say, 150); // speaking straight after cancel() is silently dropped on iOS
+      } else say();
     } catch (e) { /* speech is optional */ }
+  };
+
+  // The first tap on the page switches audio on (browsers refuse to make a sound before that).
+  U.unlockAudio = () => {
+    U.playbackMode();
+    try {
+      const c = audioCtx();
+      if (c.state !== 'running') c.resume();
+      const src = c.createBufferSource();
+      src.buffer = c.createBuffer(1, 1, 22050);
+      src.connect(c.destination);
+      src.start(0);
+    } catch (e) { /* optional */ }
+    if (U.canSpeak()) {
+      try {
+        const u = new SpeechSynthesisUtterance(' ');
+        u.volume = 0;
+        speechSynthesis.speak(u);
+      } catch (e) { /* optional */ }
+    }
+  };
+  const FIRST = ['touchend', 'click', 'keydown'];
+  const onFirst = () => {
+    FIRST.forEach((e) => document.removeEventListener(e, onFirst, true));
+    U.unlockAudio();
+  };
+  FIRST.forEach((e) => document.addEventListener(e, onFirst, true));
+  // coming back from the background: wake everything up again
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible') return;
+    try {
+      if (ctx && ctx.state !== 'running') ctx.resume();
+      if (U.canSpeak()) { speechSynthesis.cancel(); speechSynthesis.resume(); }
+      U.playbackMode();
+    } catch (e) { /* optional */ }
+  });
+
+  // for the "Sound check" row in Settings
+  U.soundInfo = () => {
+    const mode = navigator.audioSession ? navigator.audioSession.type : (keep ? 'playback (clip)' : 'normal');
+    const v = !U.canSpeak() ? 'speech not supported' : voice ? voice.name + ' (' + voice.lang + ')' : 'no English voice found';
+    return 'Audio: ' + (ctx ? ctx.state : 'not started') + ' · Mode: ' + mode + ' · Voice: ' + v;
   };
   U.vibrate = (ms) => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) { /* ignore */ } };
 

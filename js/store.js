@@ -40,7 +40,7 @@
       sessions: 0, perfect: 0, maxCombo: 0, achievements: {}, history: {},
     },
     avatar: A.avatar.defaults(),
-    settings: { sound: true, tts: true, intro: true, newPerDay: 10, session: 12, style: 'mixed' },
+    settings: { sound: true, tts: true, loud: true, intro: true, newPerDay: 10, session: 12, style: 'mixed' },
     daily: { day: -1, newDone: 0 },
     };
     A.seed.forEach((d, i) => addSeed(s, d, i));
@@ -147,6 +147,7 @@
     const t = raw.settings && typeof raw.settings === 'object' ? raw.settings : {};
     s.settings.sound = bool(t.sound, true);
     s.settings.tts = bool(t.tts, true);
+    s.settings.loud = bool(t.loud, true);
     s.settings.intro = bool(t.intro, true);
     s.settings.newPerDay = int(t.newPerDay, 1, 100, 10);
     s.settings.session = int(t.session, 4, 40, 12);

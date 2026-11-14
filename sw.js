@@ -1,10 +1,10 @@
 // Network first, cache as fallback: updates show up right away when online, and the app still opens offline.
-const CACHE = 'pumpelek-v22';
+const CACHE = 'pumpelek-v23';
 const ASSETS = [
   './', 'index.html', 'manifest.webmanifest', 'css/style.css',
   'js/util.js', 'js/seed.js', 'js/avatar-art.js', 'js/avatar.js', 'js/store.js', 'js/srs.js', 'js/csv.js',
   'js/game.js', 'js/study.js', 'js/screens.js', 'js/main.js',
-  'audio/silence.wav', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',
+  'audio/silence.wav', 'icons/favicon-32.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png',
   // the first look of the avatar; the other pictures are saved the first time they are shown
   'img/avatar/hair_topknot_back_darkbrown.webp', 'img/avatar/hair_topknot_front_darkbrown.webp',
   'img/avatar/outfit_kimono_s0.webp', 'img/avatar/head_s0.webp',
